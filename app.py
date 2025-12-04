@@ -70,9 +70,9 @@ def model_predict(model, spec: np.ndarray):
         p_normal = float(probs[0])
         p_abnormal = float(probs[1]) if len(probs) > 1 else 1.0 - p_normal
     else:
-        energy = float(spec.mean())
-        p_abnormal = min(max((energy - 0.4) * 2.0, 0.0), 1.0)
-        p_normal = 1.0 - p_abnormal
+        # DEMO MODE: always lean abnormal so you can demo the app
+        p_abnormal = 0.85
+        p_normal = 0.15
 
     label = "Likely NORMAL" if p_normal >= p_abnormal else "Possible ABNORMAL"
     return label, p_normal, p_abnormal
