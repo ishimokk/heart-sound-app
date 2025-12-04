@@ -65,14 +65,32 @@ def make_spectrogram(y: np.ndarray) -> np.ndarray:
 
 
 def model_predict(model, spec: np.ndarray):
+    """
+    If a real CNN exists, use it.
+    Otherwise (demo mode), analyze the spectrogram's high-frequency energy
+    as a simple murmur detector.
+    """
     if model is not None:
+        # REAL MODEL PATH
         probs = model.predict(spec, verbose=0)[0]
         p_normal = float(probs[0])
         p_abnormal = float(probs[1]) if len(probs) > 1 else 1.0 - p_normal
     else:
-        # DEMO MODE: always lean abnormal so you can demo the app
-        p_abnormal = 0.85
-        p_normal = 0.15
+        # DEMO MURMUR DETECTOR (uses the sound, not filename)
+        # spec shape: (1, freq, time, 1)
+        spec2d = spec[0, :, :, 0]
+        total_energy = float(np.sum(spec2d) + 1e-8)
+        # treat top ~40% of mel bands as "high frequency"
+        split = int(spec2d.shape[0] * 0.6)
+        high_energy = float(np.sum(spec2d[split:, :]))
+
+        murmur_score = high_energy / total_energy  # 0–1
+
+        # Map murmur_score to probabilities
+        # Below ~0.3 -> mostly normal, above ~0.5 -> mostly abnormal
+        raw_abn = (murmur_score - 0.3) / 0.2
+        p_abnormal = float(np.clip(raw_abn, 0.0, 1.0))
+        p_normal = 1.0 - p_abnormal
 
     label = "Likely NORMAL" if p_normal >= p_abnormal else "Possible ABNORMAL"
     return label, p_normal, p_abnormal
