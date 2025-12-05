@@ -25,9 +25,19 @@ TOTAL_PAGES = 9  # we now have 9 steps
 st.markdown(
     """
     <style>
-        .stApp {
-            background-color: #ffffff;
+        /* Force dark text everywhere for readability */
+        body, .stApp, .stMarkdown, .stMarkdown p, .stMarkdown li,
+        h1, h2, h3, h4, h5, h6,
+        p, label, span, div {
+            color: #111827 !important;
         }
+
+        /* Page background */
+        .stApp {
+            background-color: #ffffff !important;
+        }
+
+        /* Header styling */
         .app-header {
             text-align: center;
             margin-bottom: 0.75rem;
@@ -37,9 +47,10 @@ st.markdown(
         }
         .app-header p {
             margin-top: 0;
-            color: #111827;
             font-size: 0.95rem;
         }
+
+        /* Card styling */
         .card {
             background-color: #ffffff;
             padding: 1.1rem 1.3rem;
@@ -54,23 +65,29 @@ st.markdown(
         }
         .card-text {
             font-size: 0.95rem;
-            color: #111827;
         }
+
+        /* Footer */
         .footer {
             margin-top: 2rem;
             padding-top: 0.75rem;
             border-top: 1px solid #e5e7eb;
             font-size: 0.9rem;
-            color: #111827;
             text-align: center;
         }
         .footer span {
             font-weight: 600;
         }
+
+        /* Links (if any) */
+        a {
+            color: #0A74DA !important;
+        }
     </style>
     """,
     unsafe_allow_html=True,
 )
+
 
 
 def card(title: str, body: str):
