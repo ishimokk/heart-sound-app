@@ -154,7 +154,7 @@ SYMPTOM_QUESTIONS = {
     "fever": "Do you currently have a fever or have you had a recent fever that could indicate an infection?",
 }
 
-# Lifestyle questions now as YES/NO (checkboxes)
+# Lifestyle questions – Yes/No
 LIFESTYLE_QUESTIONS = {
     "low_exercise": "Do you usually exercise less than three days per week?",
     "unhealthy_diet": "Is your usual diet mostly fast food, takeout, or processed foods?",
@@ -287,7 +287,7 @@ def compute_history_symptom_risk(a: dict) -> float:
 
 def compute_lifestyle_score(a: dict) -> float:
     """
-    Lifestyle now is simple Yes/No:
+    Lifestyle is simple Yes/No:
     1 = risk factor present, 0 = not present.
     Higher score = more risk factors.
     """
@@ -567,14 +567,20 @@ elif st.session_state.page == 3:
     card(
         "Long-term conditions",
         "These questions ask about medical conditions that can change heart risk over time. "
-        "You can leave items unchecked if they do not apply.",
+        "For each item, choose Yes or No.",
     )
 
     for key, question in HISTORY_QUESTIONS.items():
-        st.session_state.answers[key] = st.checkbox(
+        prev_val = st.session_state.answers.get(key, False)
+        default_idx = 1 if prev_val else 0
+        choice = st.radio(
             question,
-            value=st.session_state.answers.get(key, False),
+            ["No", "Yes"],
+            index=default_idx,
+            horizontal=True,
+            key=f"hist_{key}",
         )
+        st.session_state.answers[key] = (choice == "Yes")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -589,15 +595,22 @@ elif st.session_state.page == 4:
 
     card(
         "How you have been feeling",
-        "These questions focus on symptoms. If you have chest pain, difficulty breathing, or fainting, "
-        "you should contact a healthcare professional, even if this app shows a low risk.",
+        "These questions focus on symptoms. For each item, choose Yes or No. "
+        "If you have chest pain, difficulty breathing, or fainting, you should contact a healthcare professional, "
+        "even if this app shows a low risk.",
     )
 
     for key, question in SYMPTOM_QUESTIONS.items():
-        st.session_state.answers[key] = st.checkbox(
+        prev_val = st.session_state.answers.get(key, False)
+        default_idx = 1 if prev_val else 0
+        choice = st.radio(
             question,
-            value=st.session_state.answers.get(key, False),
+            ["No", "Yes"],
+            index=default_idx,
+            horizontal=True,
+            key=f"symp_{key}",
         )
+        st.session_state.answers[key] = (choice == "Yes")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -616,10 +629,16 @@ elif st.session_state.page == 5:
     )
 
     for key, question in LIFESTYLE_QUESTIONS.items():
-        st.session_state.answers[key] = st.checkbox(
+        prev_val = st.session_state.answers.get(key, False)
+        default_idx = 1 if prev_val else 0
+        choice = st.radio(
             question,
-            value=st.session_state.answers.get(key, False),
+            ["No", "Yes"],
+            index=default_idx,
+            horizontal=True,
+            key=f"life_{key}",
         )
+        st.session_state.answers[key] = (choice == "Yes")
 
     col1, col2 = st.columns(2)
     with col1:
