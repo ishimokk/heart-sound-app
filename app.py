@@ -456,7 +456,6 @@ def compute_vitals_score(a: dict) -> float:
     temp = a.get("temperature")
     if temp is not None:
         max_score += 1.0
-        # assume °F or °C; just look for fever or low temp
         if temp >= 100.4 or temp <= 95:
             score += 1.0
         elif 99.0 <= temp < 100.4:
@@ -499,19 +498,16 @@ def model_predict(model, spec, a: dict):
         p_abnormal_audio = audio_abnormality_score(spec)
         p_normal_audio = 1.0 - p_abnormal_audio
 
-    # Combine non-audio into one risk score
     combined_non_audio = (
         0.5 * history_symptom_risk + 0.3 * lifestyle_score + 0.2 * vitals_score
     )
     combined_non_audio = float(np.clip(combined_non_audio, 0.0, 1.0))
 
-    # Overall
     p_abn = float(np.clip(0.6 * p_abnormal_audio + 0.4 * combined_non_audio, 0.0, 1.0))
     p_norm = 1.0 - p_abn
 
     label = "Likely NORMAL" if p_norm >= p_abn else "Possible ABNORMAL"
 
-    # Simple severity bucket
     if p_abn < 0.3:
         severity = "Low concern (within this prototype)"
     elif p_abn < 0.6:
@@ -601,7 +597,12 @@ elif st.session_state.page == 2:
     answers["age"] = st.selectbox(
         "What is your age group?",
         ["Under 30", "30–44", "45–59", "60+"],
-        index=["Under 30", "30–44", "45–59", "60+"].index(answers.get("age", "Under 30"))
+        index=[
+            "Under 30",
+            "30–44",
+            "45–59",
+            "60+",
+        ].index(answers.get("age", "Under 30"))
         if "age" in answers
         else 0,
     )
@@ -621,23 +622,36 @@ elif st.session_state.page == 2:
     st.write("You can optionally enter your height and weight to estimate body mass index (BMI).")
     col1, col2 = st.columns(2)
     with col1:
+        prev_height = answers.get("height_cm")
+        start_height = (
+            prev_height
+            if isinstance(prev_height, (int, float)) and prev_height > 0
+            else 0.0
+        )
         height_cm = st.number_input(
             "Height (in centimeters)",
             min_value=0.0,
             max_value=260.0,
-            value=answers.get("height_cm", 0.0),
+            value=float(start_height),
             step=0.5,
         )
-        answers["height_cm"] = height_cm if height_cm > 0 else None
+        answers["height_cm"] = float(height_cm) if height_cm > 0 else None
+
     with col2:
+        prev_weight = answers.get("weight_kg")
+        start_weight = (
+            prev_weight
+            if isinstance(prev_weight, (int, float)) and prev_weight > 0
+            else 0.0
+        )
         weight_kg = st.number_input(
             "Weight (in kilograms)",
             min_value=0.0,
             max_value=500.0,
-            value=answers.get("weight_kg", 0.0),
+            value=float(start_weight),
             step=0.5,
         )
-        answers["weight_kg"] = weight_kg if weight_kg > 0 else None
+        answers["weight_kg"] = float(weight_kg) if weight_kg > 0 else None
 
     bmi = None
     if answers.get("height_cm") is not None and answers.get("weight_kg") is not None:
@@ -737,13 +751,13 @@ elif st.session_state.page == 6:
 
     for key, label in VITAL_FIELDS.items():
         existing = st.session_state.answers.get(key, None)
+        start_val = float(existing) if isinstance(existing, (int, float)) and existing > 0 else 0.0
         value = st.number_input(
             label,
-            value=float(existing) if isinstance(existing, (int, float)) else 0.0,
+            value=start_val,
             min_value=0.0,
             step=1.0,
         )
-        # Treat 0 as "not provided"
         st.session_state.answers[key] = value if value > 0 else None
 
     col1, col2 = st.columns(2)
