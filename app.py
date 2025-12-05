@@ -154,61 +154,14 @@ SYMPTOM_QUESTIONS = {
     "fever": "Do you currently have a fever or have you had a recent fever that could indicate an infection?",
 }
 
-# Lifestyle questions with discrete options
+# Lifestyle questions now as YES/NO (checkboxes)
 LIFESTYLE_QUESTIONS = {
-    "exercise_level": (
-        "How often do you exercise in a typical week?",
-        [
-            "Rarely or never",
-            "1–2 days per week",
-            "3–4 days per week",
-            "5 or more days per week",
-        ],
-    ),
-    "diet_quality": (
-        "How would you describe your usual diet?",
-        [
-            "Mostly fast food or processed foods",
-            "Mixed (some healthy, some unhealthy)",
-            "Mostly home cooked with fruits and vegetables",
-        ],
-    ),
-    "sleep_hours": (
-        "On average, how many hours do you sleep per night?",
-        [
-            "Less than 5 hours",
-            "5–6 hours",
-            "7–8 hours",
-            "More than 8 hours",
-        ],
-    ),
-    "stress_level": (
-        "How would you rate your overall stress level?",
-        [
-            "Very high",
-            "High",
-            "Moderate",
-            "Low",
-        ],
-    ),
-    "caffeine_intake": (
-        "How much caffeine do you usually have in a day? (coffee, tea, energy drinks, soda)",
-        [
-            "None or very little",
-            "1–2 caffeinated drinks",
-            "3–4 caffeinated drinks",
-            "More than 4 caffeinated drinks",
-        ],
-    ),
-    "water_intake": (
-        "How many cups or glasses of water do you usually drink per day?",
-        [
-            "Fewer than 3 cups",
-            "3–5 cups",
-            "6–8 cups",
-            "More than 8 cups",
-        ],
-    ),
+    "low_exercise": "Do you usually exercise less than three days per week?",
+    "unhealthy_diet": "Is your usual diet mostly fast food, takeout, or processed foods?",
+    "short_sleep": "Do you usually sleep fewer than seven hours per night?",
+    "high_stress": "Do you feel that your overall stress level is high or very high most days?",
+    "high_caffeine": "Do you usually drink three or more caffeinated drinks per day (for example coffee, tea, soda, or energy drinks)?",
+    "low_water": "Do you usually drink fewer than five cups or glasses of water per day?",
 }
 
 # Vitals fields (optional)
@@ -333,79 +286,18 @@ def compute_history_symptom_risk(a: dict) -> float:
 
 
 def compute_lifestyle_score(a: dict) -> float:
-    # 0 = healthier, 1 = less healthy
+    """
+    Lifestyle now is simple Yes/No:
+    1 = risk factor present, 0 = not present.
+    Higher score = more risk factors.
+    """
     score = 0.0
     max_score = 0.0
 
-    # Exercise
-    ex = a.get("exercise_level", "Rarely or never")
-    max_score += 1.0
-    if ex == "Rarely or never":
-        score += 1.0
-    elif ex == "1–2 days per week":
-        score += 0.7
-    elif ex == "3–4 days per week":
-        score += 0.3
-    else:  # 5 or more days
-        score += 0.1
-
-    # Diet
-    diet = a.get("diet_quality", "Mixed (some healthy, some unhealthy)")
-    max_score += 1.0
-    if diet == "Mostly fast food or processed foods":
-        score += 1.0
-    elif diet == "Mixed (some healthy, some unhealthy)":
-        score += 0.6
-    else:
-        score += 0.2
-
-    # Sleep
-    sleep = a.get("sleep_hours", "5–6 hours")
-    max_score += 1.0
-    if sleep == "Less than 5 hours":
-        score += 1.0
-    elif sleep == "5–6 hours":
-        score += 0.7
-    elif sleep == "7–8 hours":
-        score += 0.2
-    else:
-        score += 0.3
-
-    # Stress
-    stress = a.get("stress_level", "Moderate")
-    max_score += 1.0
-    if stress == "Very high":
-        score += 1.0
-    elif stress == "High":
-        score += 0.8
-    elif stress == "Moderate":
-        score += 0.5
-    else:
-        score += 0.2
-
-    # Caffeine
-    caf = a.get("caffeine_intake", "1–2 caffeinated drinks")
-    max_score += 1.0
-    if caf == "None or very little":
-        score += 0.2
-    elif caf == "1–2 caffeinated drinks":
-        score += 0.4
-    elif caf == "3–4 caffeinated drinks":
-        score += 0.7
-    else:
-        score += 1.0
-
-    # Water
-    water = a.get("water_intake", "3–5 cups")
-    max_score += 1.0
-    if water == "Fewer than 3 cups":
-        score += 1.0
-    elif water == "3–5 cups":
-        score += 0.7
-    elif water == "6–8 cups":
-        score += 0.3
-    else:
-        score += 0.2
+    for key in LIFESTYLE_QUESTIONS.keys():
+        max_score += 1.0
+        if a.get(key, False):
+            score += 1.0
 
     if max_score == 0:
         return 0.0
@@ -720,16 +612,13 @@ elif st.session_state.page == 5:
 
     card(
         "Daily habits",
-        "Lifestyle factors like exercise, diet, sleep, stress, caffeine, and water intake can all influence "
-        "overall heart health over time.",
+        "These questions ask about lifestyle patterns that may increase heart risk over time.",
     )
 
-    for key, (question, options) in LIFESTYLE_QUESTIONS.items():
-        default_value = st.session_state.answers.get(key, options[0])
-        st.session_state.answers[key] = st.selectbox(
+    for key, question in LIFESTYLE_QUESTIONS.items():
+        st.session_state.answers[key] = st.checkbox(
             question,
-            options,
-            index=options.index(default_value) if default_value in options else 0,
+            value=st.session_state.answers.get(key, False),
         )
 
     col1, col2 = st.columns(2)
@@ -877,12 +766,9 @@ elif st.session_state.page == 9:
 
     st.markdown("---")
     st.markdown("### Lifestyle")
-    for key, (question, options) in LIFESTYLE_QUESTIONS.items():
-        val = a.get(key, None)
-        if val is None:
-            st.write(f"- {question} — **Not provided**")
-        else:
-            st.write(f"- {question} — **{val}**")
+    for key, question in LIFESTYLE_QUESTIONS.items():
+        val = a.get(key, False)
+        st.write(f"- {question} — **{'Yes' if val else 'No'}**")
 
     st.markdown("---")
     st.markdown("### Vital signs (if provided)")
