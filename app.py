@@ -25,16 +25,16 @@ TOTAL_PAGES = 9  # we now have 9 steps
 st.markdown(
     """
     <style>
-        /* Force dark text everywhere for readability */
-        body, .stApp, .stMarkdown, .stMarkdown p, .stMarkdown li,
-        h1, h2, h3, h4, h5, h6,
-        p, label, span, div {
-            color: #111827 !important;
-        }
-
         /* Page background */
         .stApp {
             background-color: #ffffff !important;
+        }
+
+        /* Make main text darker and readable, but do NOT override all divs/spans */
+        .stMarkdown, .stMarkdown p, .stMarkdown li,
+        h1, h2, h3, h4, h5, h6,
+        p, label {
+            color: #111827 !important;
         }
 
         /* Header styling */
@@ -44,10 +44,12 @@ st.markdown(
         }
         .app-header h1 {
             margin-bottom: 0.25rem;
+            color: #111827 !important;
         }
         .app-header p {
             margin-top: 0;
             font-size: 0.95rem;
+            color: #111827 !important;
         }
 
         /* Card styling */
@@ -62,9 +64,28 @@ st.markdown(
         .card-title {
             font-weight: 600;
             margin-bottom: 0.35rem;
+            color: #111827 !important;
         }
         .card-text {
             font-size: 0.95rem;
+            color: #111827 !important;
+        }
+
+        /* Buttons: white text on medical blue */
+        .stButton > button {
+            background-color: #0A74DA !important;
+            color: #ffffff !important;
+            border-radius: 0.5rem;
+            border: none;
+            padding: 0.4rem 1.2rem;
+        }
+        .stButton > button:hover {
+            background-color: #085BB0 !important;
+        }
+
+        /* Progress bar text */
+        .stProgress .st-bo {
+            color: #111827 !important;
         }
 
         /* Footer */
@@ -74,6 +95,7 @@ st.markdown(
             border-top: 1px solid #e5e7eb;
             font-size: 0.9rem;
             text-align: center;
+            color: #111827 !important;
         }
         .footer span {
             font-weight: 600;
@@ -87,7 +109,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
 
 
 def card(title: str, body: str):
